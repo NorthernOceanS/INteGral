@@ -8,3 +8,4 @@
 !src
 !src/**
 !webpack.config.js
+!LICENSE.md

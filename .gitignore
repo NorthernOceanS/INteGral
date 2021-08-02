@@ -1,0 +1,10 @@
+*
+!.gitignore
+!nc_index.js
+!package.json
+!package-lock.json
+# !nc
+# !nc/**
+!src
+!src/**
+!webpack.config.js

@@ -1,4 +1,6 @@
 //The playerID must be the player's xuid.
+//TODO:Emphasize the prerequisite above.
+//TODO:Discuess the repetitive code
 import './plugin/index.js';
 import { systemInstance as system, emptyPlatform, Coordinate, Position, BlockType, Direction, Block } from 'norma-core';
 
@@ -27,31 +29,31 @@ system.inject({
 })
 
 mc.listen("onPlaceBlock", (player, block) => {
-    log(player.xuid)
     handlePlayerRequest({ requestType: "get_block_type", playerID: player.xuid, additionalData: assembleUseItemData(player, block) })
     return true
 })
 mc.listen("onUseItemOn", (player, item, block) => {
-    log(item.type)
+    if (item.type.startsWith("normaconstructor:")) {
+        handlePlayerRequest({ requestType: item.type.slice(item.type.indexOf(":") + 1), playerID: player.xuid, additionalData: assembleUseItemData(player, block) })
+    }
     return true
 })
-function registerNewUser(playerID) {
-    let user = system.createUser(playerID)
-    //TODO:Separate the following initialization process from this function.
-    user.session["__requestAdditionalPosition"] = false;
-    user.session["__requestAdditionalBlockType"] = false;
-    user.session["__requestAdditionalDirection"] = false;
-    user.session["__logLevel"] = "verbose";
-    user.session["__on"] = true;
 
-    return user;
-}
 function getUser(playerID) {
+    function registerNewUser(playerID) {
+        let user = system.createUser(playerID)
+        //TODO:Separate the following initialization process from this function.
+        user.session["__requestAdditionalPosition"] = false;
+        user.session["__requestAdditionalBlockType"] = false;
+        user.session["__requestAdditionalDirection"] = false;
+        user.session["__logLevel"] = "verbose";
+        user.session["__on"] = true;
+        return user;
+    }
     return system.hasUser(playerID) ? system.getUser(playerID) : registerNewUser(playerID)
 }
 
 function handlePlayerRequest({ requestType, playerID, additionalData }) {
-    log(playerID)
     let user = getUser(playerID)
     const logger = loggerFactory(playerID)
     logger.log("verbose", "NZ IS JULAO!")
@@ -142,7 +144,7 @@ let compiler = {
         for (let x = startCoordinate.x; x <= endCoordinate.x; x += 32)
             for (let y = startCoordinate.y; y <= endCoordinate.y; y += 32)
                 for (let z = startCoordinate.z; z <= endCoordinate.z; z += 32)
-                    mc.runcmd(`/clone ${x} ${y} ${z} 
+                    mc.runcmd(`clone ${x} ${y} ${z} 
             ${Math.min(x + 31, endCoordinate.x)} 
             ${Math.min(y + 31, endCoordinate.y)} 
             ${Math.min(z + 31, endCoordinate.z)} 
@@ -175,7 +177,7 @@ let compiler = {
         for (let x = startCoordinate.x; x <= endCoordinate.x; x += 32)
             for (let y = startCoordinate.y; y <= endCoordinate.y; y += 32)
                 for (let z = startCoordinate.z; z <= endCoordinate.z; z += 32)
-                    mc.runcmd(`/fill ${x} ${y} ${z} 
+                    mc.runcmd(`fill ${x} ${y} ${z} 
             ${Math.min(x + 31, endCoordinate.x)} 
             ${Math.min(y + 31, endCoordinate.y)} 
             ${Math.min(z + 31, endCoordinate.z)} 
@@ -204,8 +206,8 @@ let compiler = {
     // }
 }
 async function execute(playerID) {
-    let user=getUser(playerID)
-    let logger = loggerFactory(user);
+    let user = getUser(playerID)
+    let logger = loggerFactory(playerID);
     logger.log("info", "Start validating parameters...");
     let isVaild = await user.isValidParameter();
     if (isVaild) {
@@ -232,9 +234,7 @@ function displayObject(object, playerID) {
     displayChat(JSON.stringify(object, null, '    '), playerID)
 }
 function displayChat(message, playerID) {
-    //TODO:Allow sending chat to specified player.
     if (playerID) {
-        log({ message, playerID })
         let player = mc.getPlayer(playerID)
         player.tell(message)
     }

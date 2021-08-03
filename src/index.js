@@ -21,17 +21,18 @@ system.inject({
     createRuntime: function (id) {
         let user = system.getUser(id);
         return {
-            logger: loggerFactory(user)
+            logger: loggerFactory(id)
         };
     }
 })
 
 mc.listen("onPlaceBlock", (player, block) => {
-    handlePlayerRequest({requestType: "get_block_type", playerID:player.xuid, additionalData:assembleUseItemData(player,block)})
+    log(player.xuid)
+    handlePlayerRequest({ requestType: "get_block_type", playerID: player.xuid, additionalData: assembleUseItemData(player, block) })
     return true
 })
 mc.listen("onUseItemOn", (player, item, block) => {
-
+    log(item.type)
     return true
 })
 function registerNewUser(playerID) {
@@ -50,8 +51,9 @@ function getUser(playerID) {
 }
 
 function handlePlayerRequest({ requestType, playerID, additionalData }) {
+    log(playerID)
     let user = getUser(playerID)
-    const logger = loggerFactory(user)
+    const logger = loggerFactory(playerID)
     logger.log("verbose", "NZ IS JULAO!")
     logger.logObject("verbose", { requestType, playerID, additionalData })
     switch (requestType) {
@@ -103,7 +105,7 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             break;
         }
         case "execute": {
-            execute(user);
+            execute(playerID);
             break;
         }
         case "show_menu": {
@@ -201,7 +203,8 @@ let compiler = {
     //     return []
     // }
 }
-async function execute(user) {
+async function execute(playerID) {
+    let user=getUser(playerID)
     let logger = loggerFactory(user);
     logger.log("info", "Start validating parameters...");
     let isVaild = await user.isValidParameter();
@@ -230,7 +233,12 @@ function displayObject(object, playerID) {
 }
 function displayChat(message, playerID) {
     //TODO:Allow sending chat to specified player.
-    mc.getPlayer(playerID).tell(message)
+    if (playerID) {
+        log({ message, playerID })
+        let player = mc.getPlayer(playerID)
+        player.tell(message)
+    }
+    else mc.runcmd(`say ${message}`)
 
 }
 
@@ -251,7 +259,7 @@ function setBlock(block) {
 
     });
 }
-function loggerFactory(user) {
+function loggerFactory(playerID) {
     return {
         displayChat, displayObject,
         log: function (level, message) {
@@ -263,11 +271,12 @@ function loggerFactory(user) {
                 ["error", { num: 4, color: "§c" }],
                 ["fatal", { num: 5, color: "§4" }]
             ])
+            const user = getUser(playerID)
             if (colorMap.get(level).num >= colorMap.get(user.session["__logLevel"]).num)
-                this.displayChat(colorMap.get(level).color + "[" + level + "]" + message)
+                this.displayChat(colorMap.get(level).color + "[" + level + "]" + message, playerID)
         },
         logObject: function (level, object) {
-            this.log(level, JSON.stringify(object, null, '    '))
+            this.log(level, JSON.stringify(object, null, '    '), playerID)
         }
     }
 }

@@ -11,18 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x, 16.x]
     
     steps:
     - uses: actions/checkout@v2
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
 
     - name: Build
       run: |
@@ -32,6 +23,8 @@ jobs:
     - name: GH Release
       uses: softprops/action-gh-release@v0.1.7
       with:
-        files: ncng.js
+        files: | 
+        ncng.js
+        LICENSE.md
       
 

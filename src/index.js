@@ -5,6 +5,7 @@ import './plugin/index.js';
 import { systemInstance as system, emptyPlatform, Coordinate, Position, BlockType, Direction, Block } from 'norma-core';
 
 // import { utils } from '../utils.js'
+const lastTimeOfPlayerRequest = new Map()
 
 function assembleUseItemData(player, block) {
     function getDirectionFromPlayer(player) {
@@ -54,6 +55,11 @@ function getUser(playerID) {
 }
 
 function handlePlayerRequest({ requestType, playerID, additionalData }) {
+    //Debounce.
+    const last = lastTimeOfPlayerRequest.get(playerID), now = Date.now()
+    lastTimeOfPlayerRequest.set(playerID, now)
+    if (last && now - last < 400) return
+
     let user = getUser(playerID)
     const logger = loggerFactory(playerID)
     logger.log("verbose", "NZ IS JULAO!")
@@ -100,6 +106,8 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             //logger.logObject("info", generatorArray[generatorIndex].blockTypeArray)
             //logger.log("info", "Current directionArray:")
             //logger.logObject("info", generatorArray[generatorIndex].directionArray)
+            logger.log("info", "Current generator name:")
+            logger.logObject("info", user.getCurrentGeneratorName())
             logger.log("info", "Current generator state:")
             logger.logObject("info", user.getCurrentState())
             logger.log("info", "Current session:")
@@ -112,15 +120,76 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
         }
         case "show_menu": {
             //TODO
+            let player = mc.getPlayer(playerID)
+            // player.sendModalForm("NZ IS JULAO", "Is NZ JULAO?", "YES!", "Of course!", (player, id) => {
+            //     log(id)
+            // })
+            let user = getUser(playerID)
+            let ui = user.getCurrentUI() ?? []
+
+            let form = mc.newCustomForm()
+            form.setTitle(user.getCurrentGeneratorName())
+            ui.forEach(e => {
+                switch (e["viewtype"]) {
+                    case "text": {
+                        form.addLabel(e.text)
+                        break;
+                    }
+                    case "button":
+                    case "checkbox": {
+                        let defaultValue = user.getCurrentState()[e.key]
+                        let defaultChoice = e.data.findIndex(choice => choice.value == defaultValue)
+                        form.addDropdown(e.text, Array.from(e.data, choice => choice.text), defaultChoice == -1 ? 0 : defaultChoice)
+                        break;
+                    }
+                    case "edittext": {
+                        // form.addInput(e.text, "", user.getCurrentState()[e.key])
+                        form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
+                        // form.addInput(e.text,`Input number here`, user.getCurrentState()[e.key].toString())
+
+                        break;
+                    }
+                }
+            });
+            player.sendForm(form, (player, data) => {
+                if (!data) return
+                log(data)
+                data.forEach((e, i) => {
+                    switch (ui[i]["viewtype"]) {
+                        case "text": {
+                            break;
+                        }
+                        case "button":
+                        case "checkbox": {
+                            user.getCurrentState()[ui[i].key] = ui[i].data[e].value
+                            break;
+                        }
+                        case "edittext": {
+                            // form.addInput(e.text, "", user.getCurrentState()[e.key])
+                            // form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
+                            user.getCurrentState()[ui[i].key] = e
+                            break;
+                        }
+                    }
+                    if (ui[i].hasOwnProperty("dataForUIHandler")) user.UIHandler(ui[i]["dataForUIHandler"])
+                })
+
+            })
             break;
         }
-        case "read_tag": {
-            //TODO
+        case "run_nos": {
+            user.runNOS(additionalData.nos, undefined)
             break;
         }
     }
 }
-
+mc.listen("onPlayerCmd", (player, cmd) => {
+    if (cmd.startsWith("/nos:")) {
+        handlePlayerRequest({ requestType: "run_nos", playerID: player.xuid, additionalData: { nos: cmd.slice("/nos:".length) } })
+        return false
+    }
+    return true
+})
 let compiler = {
     raw: function (blockArray) {
         return blockArray

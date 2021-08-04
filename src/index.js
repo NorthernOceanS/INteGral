@@ -124,6 +124,16 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             // player.sendModalForm("NZ IS JULAO", "Is NZ JULAO?", "YES!", "Of course!", (player, id) => {
             //     log(id)
             // })
+
+            // let form=mc.newSimpleForm()
+            // form.setTitle("title")
+            // form.addButton("123")
+            // form.addButton("123")
+            // form.addButton("123")
+            // form.addButton("123")
+            // form.addButton("123")
+            // form.addButton("123")
+            // player.sendForm(form,()=>{})
             let user = getUser(playerID)
             let ui = user.getCurrentUI() ?? []
 

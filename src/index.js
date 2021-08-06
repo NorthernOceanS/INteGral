@@ -355,7 +355,7 @@ function loggerFactory(playerID) {
                 this.displayChat(colorMap.get(level).color + "[" + level + "]" + message, playerID)
         },
         logObject: function (level, object) {
-            this.log(level, JSON.stringify(object, null, '    '), playerID)
+            this.log(level, JSON.stringify(object, null, '    '))
         }
     }
 }

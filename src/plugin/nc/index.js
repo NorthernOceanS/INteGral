@@ -1,6 +1,6 @@
 
 import { systemInstance as system, Description, Usage, Block, Coordinate, Position, BlockType, BuildInstruction, canonicalGeneratorFactory } from 'norma-core';
-import { utils } from './utils.js';
+import { utils } from '../utils.js';
 import * as preset from './presetBuildingsInterface.js';
 
 system.registerCanonicalGenerator({
@@ -125,7 +125,7 @@ system.registerCanonicalGenerator({
                             blocks.push(new Block(
                                 new Position(
                                     new Coordinate(x, y, z),
-                                    positions[0].tickingArea
+                                    positions[0].dimension
                                 ),
                                 blockTypes[0])
                             )
@@ -267,7 +267,7 @@ let createLineGenerator = canonicalGeneratorFactory({
                         blockArray.push(new Block(
                             new Position(
                                 new Coordinate(x, state.gradient * (z - positionArray[0].coordinate.z) + y, z),
-                                positionArray[0].tickingArea
+                                positionArray[0].dimension
                             ),
                             blockTypeArray[0])
                         )
@@ -280,7 +280,7 @@ let createLineGenerator = canonicalGeneratorFactory({
                         blockArray.push(new Block(
                             new Position(
                                 new Coordinate(x, -state.gradient * (z - positionArray[0].coordinate.z) + y, z),
-                                positionArray[0].tickingArea
+                                positionArray[0].dimension
                             ),
                             blockTypeArray[0])
                         )
@@ -293,7 +293,7 @@ let createLineGenerator = canonicalGeneratorFactory({
                         blockArray.push(new Block(
                             new Position(
                                 new Coordinate(x, state.gradient * (x - positionArray[0].coordinate.x) + y, z),
-                                positionArray[0].tickingArea
+                                positionArray[0].dimension
                             ),
                             blockTypeArray[0])
                         )
@@ -306,7 +306,7 @@ let createLineGenerator = canonicalGeneratorFactory({
                         blockArray.push(new Block(
                             new Position(
                                 new Coordinate(x, -state.gradient * (x - positionArray[0].coordinate.x) + y, z),
-                                positionArray[0].tickingArea
+                                positionArray[0].dimension
                             ),
                             blockTypeArray[0])
                         )
@@ -513,7 +513,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["surface"]
                                 )
@@ -527,7 +527,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["bar"]
                                 )
@@ -544,7 +544,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["surface"]
                                 )
@@ -554,7 +554,7 @@ system.registerCanonicalGenerator({
                     }
                     case "dash_line": {
                         for (let j = 0; j <= state["length"] - 1; j++) {
-                            let position = new Position(transform(new Coordinate(positionArray[0].coordinate.x + j, positionArray[0].coordinate.y, positionArray[0].coordinate.z + i - offset)), positionArray[0].tickingArea)
+                            let position = new Position(transform(new Coordinate(positionArray[0].coordinate.x + j, positionArray[0].coordinate.y, positionArray[0].coordinate.z + i - offset)), positionArray[0].dimension)
                             if ((j % (state["dashLineInterval"] + state["dashLineLength"])) < state["dashLineInterval"]) //Black first.
                                 blockArray.push(new Block(position, materials["surface"]))
                             else
@@ -571,7 +571,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["yellow_line"]
                                 )
@@ -722,7 +722,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["iron_block"]
                                 )
@@ -736,7 +736,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["glass_pane"]
                                 )
@@ -753,7 +753,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["iron_block"]
                                 )
@@ -767,7 +767,7 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["rail"]
                                 )
@@ -784,14 +784,14 @@ system.registerCanonicalGenerator({
                                 new Block(
                                     new Position(
                                         transform(coordinate),
-                                        positionArray[0].tickingArea
+                                        positionArray[0].dimension
                                     ),
                                     materials["iron_block"]
                                 )
                             )
                         }
                         for (let j = 0; j < state["length"] - 1; j++) {
-                            let position = new Position(transform(new Coordinate(positionArray[0].coordinate.x + j, positionArray[0].coordinate.y + 1, positionArray[0].coordinate.z + i - offset)), positionArray[0].tickingArea)
+                            let position = new Position(transform(new Coordinate(positionArray[0].coordinate.x + j, positionArray[0].coordinate.y + 1, positionArray[0].coordinate.z + i - offset)), positionArray[0].dimension)
                             if (j % 15 == 0) blockArray.push(new Block(position, materials["red_stone_torch"]))
                         }
                         break;
@@ -843,7 +843,7 @@ system.registerCanonicalGenerator({
                 blockArray.push(new Block(
                     new Position(
                         coordinate,
-                        positionArray[0].tickingArea
+                        positionArray[0].dimension
                     ),
                     blockTypeArray[0])
                 )
@@ -921,7 +921,7 @@ system.registerCanonicalGenerator({
                             blockArray.push(new Block(
                                 new Position(
                                     new Coordinate(x, y, z),
-                                    positionArray[0].tickingArea
+                                    positionArray[0].dimension
                                 ),
                                 {
                                     "blockIdentifier": "minecraft:air",
@@ -990,7 +990,7 @@ system.registerCanonicalGenerator({
                 blockArray.push(new Block(
                     new Position(
                         coordinate,
-                        positionArray[0].tickingArea
+                        positionArray[0].dimension
                     ),
                     new BlockType("minecraft:stained_hardened_clay", { "color": "cyan" })
                 ))
@@ -1047,7 +1047,7 @@ system.registerCanonicalGenerator({
                 blockArray.push(new Block(
                     new Position(
                         coordinate,
-                        positionArray[0].tickingArea
+                        positionArray[0].dimension
                     ),
                     blockTypeArray[0]
                 ))
@@ -1110,7 +1110,7 @@ system.registerCanonicalGenerator({
                 blockArray.push(new Block(
                     new Position(
                         coordinate,
-                        positionArray[0].tickingArea
+                        positionArray[0].dimension
                     ),
                     blockTypeArray[0]
                 ))
@@ -1158,7 +1158,7 @@ let flagGenerator = canonicalGeneratorFactory({
                         else if (positionArray[0].coordinate.y - y < option.height / 2) return new BlockType("minecraft:wool", { "color": "yellow" })
                         else return new BlockType("minecraft:wool", { "color": "red" })
                     })()
-                    blockArray.push(new Block(new Position(new Coordinate(x, y, z), positionArray[0].tickingArea), blockType))
+                    blockArray.push(new Block(new Position(new Coordinate(x, y, z), positionArray[0].dimension), blockType))
                 }
 
 
@@ -1353,7 +1353,7 @@ system.registerCanonicalGenerator({
                             )
                             e.runtime.logger.log("verbose", "NZ IS JULAO")
                             blockArray.push(new Block(
-                                new Position(absoluteCordinate, position.tickingArea),
+                                new Position(absoluteCordinate, position.dimension),
                                 recipe[schematics[y][z]](rawCoordinate)
                             ))
                         }
@@ -1549,7 +1549,7 @@ system.registerCanonicalGenerator({
                                 relativeCoordinate.z + position.coordinate.z,
                             )
                             blockArray.push(new Block(
-                                new Position(absoluteCordinate, position.tickingArea),
+                                new Position(absoluteCordinate, position.dimension),
                                 recipe[schematics[y][z]](rawCoordinate)
                             ))
                         }
@@ -1575,7 +1575,7 @@ system.registerCanonicalGenerator({
                 startCoordinate: state.positions[0].coordinate,
                 endCoordinate: state.positions[1].coordinate,
                 referenceCoordinate: state.positions[2].coordinate,
-                tickingArea: state.positions[2].tickingArea
+                dimension: state.positions[2].dimension
             })
         }
     }
@@ -1592,7 +1592,7 @@ system.registerCanonicalGenerator({
 
             return Array.from(preset.presetBuildings.subway_station, a => new Block(new Position(new Coordinate(
                 coordinate.x + a.coordinate.x, coordinate.y + a.coordinate.y, coordinate.z + a.coordinate.z
-            ), state.positions[0].tickingArea), a.blockType))
+            ), state.positions[0].dimension), a.blockType))
 
         }
     }

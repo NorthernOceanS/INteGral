@@ -13,7 +13,11 @@ function assembleUseItemData(player, block) {
         return new Direction(rotation[0], rotation[1])
     }
     let { x, y, z } = block.pos
-    let dimension = block.pos.dimid
+    let dimension = block.pos.dimid//TODO:convert to string.
+
+    // let logger = loggerFactory(player.xuid)
+    // logger.logObject("verbose", block.getNbt().toString())
+
     return {
         blockType: new BlockType(block.type, block.getBlockState()),
         position: new Position({ x, y, z }, dimension),
@@ -24,7 +28,14 @@ system.inject({
     createRuntime: function (id) {
         let user = system.getUser(id);
         return {
-            logger: loggerFactory(id)
+            logger: loggerFactory(id),
+            file,
+            getblock: function (position) {
+                let { x, y, z } = position.coordinate
+                let rawBlock = mc.getblock(x, y, z, 0)//TODO: change to dimension id.
+                let block = new BlockType(rawBlock.type, block.getBlockState())
+                return block
+            }
         };
     }
 })
@@ -154,7 +165,7 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
                     }
                     case "edittext": {
                         // form.addInput(e.text, "", user.getCurrentState()[e.key])
-                        form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
+                        form.addInput(e.text, `Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
                         // form.addInput(e.text,`Input number here`, user.getCurrentState()[e.key].toString())
 
                         break;
@@ -177,13 +188,28 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
                         case "edittext": {
                             // form.addInput(e.text, "", user.getCurrentState()[e.key])
                             // form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
-                            user.getCurrentState()[ui[i].key] = e
+                            user.getCurrentState()[ui[i].key] = parseInt(e)
                             break;
                         }
                     }
                     if (ui[i].hasOwnProperty("dataForUIHandler")) user.UIHandler(ui[i]["dataForUIHandler"])
                 })
 
+            })
+            break;
+        }
+        case "show_meta_menu": {
+            //TODO
+            let player = mc.getPlayer(playerID)
+            let user = getUser(playerID)
+
+            let form = mc.newCustomForm()
+            form.setTitle(user.getCurrentGeneratorName())
+            form.addDropdown("Choose generator:", user.getGeneratorNames(), user.getGeneratorNames().findIndex((e) => e == user.getCurrentGeneratorName()))
+            player.sendForm(form, (player, data) => {
+                if (!data) return
+                log(data)
+                user.switchGenerator(data[0])
             })
             break;
         }
@@ -334,9 +360,7 @@ function setBlock(block) {
     //It currently use destroy mode to force replace the old block, but will leave tons of items.
     //Might change to set air block first.
     //NEW TODO: UNDERSTANDING WHAT THE FUDGE I WAS TALKING ABOUT HERE.
-    mc.runcmd(`/setblock ${coordinate.x} ${coordinate.y} ${coordinate.z} ${blockType.blockIdentifier.slice(blockType.blockIdentifier.indexOf(":") + 1)} [${blockType.blockState == null ? "" : JSON.stringify(blockType.blockState).slice(1, -1)}] replace`, (commandResultData) => {
-
-    });
+    mc.runcmd(`/setblock ${coordinate.x} ${coordinate.y} ${coordinate.z} ${blockType.blockIdentifier.slice(blockType.blockIdentifier.indexOf(":") + 1)} [${blockType.blockState == null ? "" : JSON.stringify(blockType.blockState).slice(1, -1)}] replace`);
 }
 function loggerFactory(playerID) {
     return {

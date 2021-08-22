@@ -204,7 +204,7 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             let user = getUser(playerID)
 
             let form = mc.newCustomForm()
-            form.setTitle(user.getCurrentGeneratorName())
+            form.setTitle("Meta menu")
             form.addDropdown("Choose generator:", user.getGeneratorNames(), user.getGeneratorNames().findIndex((e) => e == user.getCurrentGeneratorName()))
             player.sendForm(form, (player, data) => {
                 if (!data) return

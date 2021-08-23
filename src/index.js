@@ -24,18 +24,19 @@ function assembleUseItemData(player, block) {
         direction: getDirectionFromPlayer(player)
     }
 }
+function getBlock(position) {
+    let { x, y, z } = position.coordinate
+    let rawBlock = mc.getBlock(x, y, z, 0)//TODO: change to dimension id.
+    let block = new BlockType(rawBlock.type, rawBlock.getBlockState())
+    return block
+}
 system.inject({
     createRuntime: function (id) {
         let user = system.getUser(id);
         return {
             logger: loggerFactory(id),
             file,
-            getblock: function (position) {
-                let { x, y, z } = position.coordinate
-                let rawBlock = mc.getblock(x, y, z, 0)//TODO: change to dimension id.
-                let block = new BlockType(rawBlock.type, block.getBlockState())
-                return block
-            }
+            getBlock
         };
     }
 })
@@ -214,14 +215,17 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             break;
         }
         case "run_nos": {
+            if(additionalData.nos=="undo") undo(playerID)
+            else
             user.runNOS(additionalData.nos, undefined)
             break;
         }
     }
 }
 mc.listen("onPlayerCmd", (player, cmd) => {
-    if (cmd.startsWith("/nos:")) {
-        handlePlayerRequest({ requestType: "run_nos", playerID: player.xuid, additionalData: { nos: cmd.slice("/nos:".length) } })
+    log(cmd)
+    if (cmd.startsWith("nos:")) {
+        handlePlayerRequest({ requestType: "run_nos", playerID: player.xuid, additionalData: { nos: cmd.slice("nos:".length) } })
         return false
     }
     return true
@@ -310,6 +314,85 @@ let compiler = {
     //     return []
     // }
 }
+function undoPrepare(playerID, buildInstructions) {
+    let user = getUser(playerID)
+    let logger = loggerFactory(playerID);
+    let coordinates = buildInstructions.map((buildInstruction) => {
+        const affectedCoordinateCalculator = {
+            clone: function ({ startCoordinate, endCoordinate, targetCoordinate }) {
+                if (startCoordinate.x >= endCoordinate.x) {
+                    let temp = startCoordinate.x
+                    startCoordinate.x = endCoordinate.x
+                    endCoordinate.x = temp
+                }
+                if (startCoordinate.y >= endCoordinate.y) {
+                    let temp = startCoordinate.y
+                    startCoordinate.y = endCoordinate.y
+                    endCoordinate.y = temp
+                }
+                if (startCoordinate.z >= endCoordinate.z) {
+                    let temp = startCoordinate.z
+                    startCoordinate.z = endCoordinate.z
+                    endCoordinate.z = temp
+                }
+                let coordinates = []
+                for (let x = startCoordinate.x; x <= endCoordinate.x; x++)
+                    for (let y = startCoordinate.y; y <= endCoordinate.y; y++)
+                        for (let z = startCoordinate.z; z <= endCoordinate.z; z++)
+                            coordinates.push(new Coordinate(targetCoordinate.x + x, targetCoordinate.y + y, targetCoordinate.z + z))
+
+                return coordinates
+            },
+            fill: function ({ blockType, startCoordinate, endCoordinate }) {
+
+                if (startCoordinate.x >= endCoordinate.x) {
+                    let temp = startCoordinate.x
+                    startCoordinate.x = endCoordinate.x
+                    endCoordinate.x = temp
+                }
+                if (startCoordinate.y >= endCoordinate.y) {
+                    let temp = startCoordinate.y
+                    startCoordinate.y = endCoordinate.y
+                    endCoordinate.y = temp
+                }
+                if (startCoordinate.z >= endCoordinate.z) {
+                    let temp = startCoordinate.z
+                    startCoordinate.z = endCoordinate.z
+                    endCoordinate.z = temp
+                }
+
+                let coordinates = []
+                for (let x = startCoordinate.x; x <= endCoordinate.x; x++)
+                    for (let y = startCoordinate.y; y <= endCoordinate.y; y++)
+                        for (let z = startCoordinate.z; z <= endCoordinate.z; z++)
+                            coordinates.push(new Coordinate(x, y, z))
+
+                return coordinates
+            }
+        }
+
+        if (!buildInstruction.hasOwnProperty("type")) return [buildInstruction.position.coordinate]
+        else return affectedCoordinateCalculator[buildInstruction.type](buildInstruction.data)
+    }).flat()
+    logger.logObject("verbose", coordinates)
+    let affectedBlocks = coordinates.map((coordinate) => {
+        logger.logObject("verbose", new Position(coordinate))
+        return new Block(new Position(coordinate), getBlock(new Position(coordinate)))
+    })
+    logger.logObject("verbose", affectedBlocks)
+    user.session.__blockForUndo = affectedBlocks
+}
+function undo(playerID) {
+    let blocks = getUser(playerID).session.__blockForUndo
+    let logger = loggerFactory(playerID);
+    logger.log("info","Trying to undo...")
+    if (!blocks) {
+        logger.log("info", "No last execution, or such is no longer recoverable.")
+        return
+    }
+    blocks.forEach((block) => setBlock(block))
+    getUser(playerID).session.__blockForUndo = null
+}
 async function execute(playerID) {
     let user = getUser(playerID)
     let logger = loggerFactory(playerID);
@@ -322,6 +405,8 @@ async function execute(playerID) {
         if (buildInstructions === undefined) return;
 
         logger.logObject("verbose", buildInstructions)
+
+        undoPrepare(playerID, buildInstructions)
 
         for (let buildInstruction of buildInstructions) {
             //I know it looks silly... "Compatibility reason".

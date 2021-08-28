@@ -190,6 +190,7 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
                             // form.addInput(e.text, "", user.getCurrentState()[e.key])
                             // form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
                             if (ui[i].inputType && ui[i].inputType == "string") user.getCurrentState()[ui[i].key] = e
+                            else if (ui[i].inputType && ui[i].inputType == "float") user.getCurrentState()[ui[i].key] = parseFloat(e)
                             else user.getCurrentState()[ui[i].key] = parseInt(e)
                             break;
                         }

@@ -26,6 +26,7 @@ system.registerCanonicalGenerator({
             viewtype: "edittext",
             text: "Time for each eighth note in seconds(Controls the speed. Advised to be a multiple of 0.2!):",
             key: "SECOND_PER_EIGHTH_NOTE",
+            inputType: "float"
         },
         {
             viewtype: "edittext",
@@ -42,7 +43,7 @@ system.registerCanonicalGenerator({
             const { logger, file } = e.runtime
             const positionArray = e.state.positions
 
-            const { facingAxis, song_number } = e.state
+            const { facingAxis } = e.state
             let blockArray = []
 
             const songs = ((songName) => {

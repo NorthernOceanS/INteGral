@@ -394,8 +394,8 @@ let utils = {
 	},
 	misc: {
 		generatePlayerIDFromUniqueID: function (uniqueID) {
-			let low = uniqueID["64bit_low"]%10000
-			let high = uniqueID["64bit_high"]%10000
+			let low = uniqueID["64bit_low"] % 10000
+			let high = uniqueID["64bit_high"] % 10000
 			//hash function:
 
 			return (low + high) * (low + high + 1) / 2 + high;
@@ -734,6 +734,17 @@ let utils = {
 
 	},
 	blockGeometry: {
+		hasBlockDirection: function (blockType) {
+			let directionRelatedBlockStateKey = (function () {
+				//The following function decides which specific key controls how the block rotates, if it exists.
+				//It is based on the fact that, only one blockState will decide how.
+				//Hope it won't change.
+				for (let blockStateKey in blockType.blockState)
+					if (blockDirectionTable[blockStateKey] != undefined) return blockStateKey;
+				return "";
+			}())
+			return directionRelatedBlockStateKey != ""
+		},
 		getBlockDirection: function (blockType) {
 			let directionRelatedBlockStateKey = (function () {
 				//The following function decides which specific key controls how the block rotates, if it exists.

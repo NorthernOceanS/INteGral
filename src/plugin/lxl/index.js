@@ -6,31 +6,43 @@ function deepEqual(a, b) {
 }
 system.registerCanonicalGenerator({
     description: new Description("NZ IS JULAO", new Usage([], [], [], [
-        // {
-        //     viewtype: "button",
-        //     text: "Set branch direction.",
-        //     key: "branch_direction",
-        //     data: [
-        //         { value: "-z", text: "-z" },
-        //         { value: "+z", text: "+z" }
-        //     ]
-        // },
+        {
+            viewtype: "button",
+            text: "Set direction.",
+            key: "facingAxis",
+            data: [
+                { value: "-z", text: "-z" },
+                { value: "+z", text: "+z" },
+                { value: "+x", text: "+x" },
+                { value: "-x", text: "-x" }
+            ]
+        },
+        {
+            viewtype: "edittext",
+            text: "Tick of section(Affects the distance between two nodes. Must not equal or below 12!):",
+            key: "tickOfSection",
+        },
+        {
+            viewtype: "edittext",
+            text: "Time for each eighth note in seconds(Controls the speed. Advised to be a multiple of 0.2!):",
+            key: "SECOND_PER_EIGHTH_NOTE",
+        },
         {
             viewtype: "edittext",
             text: "Song name:",
             key: "song_name",
-            dataForUIHandler: "",
             inputType: "string"
         }
+
     ])),
     criteria: { positionArrayLength: 1, blockTypeArrayLength: 0, directionArrayLength: 0 },
-    option: { /*"branch_direction": "+z",*/ "song_number": 0, "song_name": "Bad_Apple_faster" },
+    option: { "facingAxis": "+x", "tickOfSection": 16, "SECOND_PER_EIGHTH_NOTE": 0.2, "song_name": "Bad_Apple_faster" },
     method: {
         UIHandler: function () { }, generate: function (e) {
             const { logger, file } = e.runtime
             const positionArray = e.state.positions
 
-            const { branch_direction, song_number } = e.state
+            const { facingAxis, song_number } = e.state
             let blockArray = []
 
             const songs = ((songName) => {
@@ -48,7 +60,7 @@ system.registerCanonicalGenerator({
                 for (let trackNumber = 0; trackNumber < midi.tracks.length; trackNumber++) {
                     logger.log("verbose", "NZ IS JULAO!")
                     const track = midi.tracks[trackNumber];
-                    const tickOfSection = 16
+                    const tickOfSection = e.state.tickOfSection
 
                     let song = {
                         name: `${songName}_${trackNumber.toString()}`,
@@ -78,7 +90,7 @@ system.registerCanonicalGenerator({
 
                     for (let note of notes) {
                         const [bar, noteName] = [note.bars, note.name]
-                        const SECOND_PER_EIGHTH_NOTE = 0.2
+                        const SECOND_PER_EIGHTH_NOTE = e.state.SECOND_PER_EIGHTH_NOTE
                         const REDSTONE_TICKS_PER_EIGHTH_NOTE = SECOND_PER_EIGHTH_NOTE * REDSTONE_TICKS_PER_SECOND_IN_MINECRAFT //tempo
                         const ordinalOfEighthNote = bar * midi.header.timeSignatures[0].timeSignature[0] * (8 / midi.header.timeSignatures[0].timeSignature[1])
                         while ((song.score.length) * song.tickOfSection <= ordinalOfEighthNote * REDSTONE_TICKS_PER_EIGHTH_NOTE) song.score.push([])
@@ -210,8 +222,63 @@ system.registerCanonicalGenerator({
                 }
             })
 
+            let transform = (function (facingAxis) {
+                switch (facingAxis) {
+                    case "+x": {
+                        return utils.coordinateGeometry.transform(
+                            (x, y, z) => x,
+                            (x, y, z) => y,
+                            (x, y, z) => z
+                        )
+                    }
+                    case "-x": {
+                        return utils.coordinateGeometry.transform(
+                            (x, y, z) => 2 * positionArray[0].coordinate.x - x,
+                            (x, y, z) => y,
+                            (x, y, z) => 2 * positionArray[0].coordinate.z - z
+                        )
+                    }
+                    case "+z": {
+                        return utils.coordinateGeometry.transform(
+                            (x, y, z) => positionArray[0].coordinate.x - (z - positionArray[0].coordinate.z),
+                            (x, y, z) => y,
+                            (x, y, z) => positionArray[0].coordinate.z + (x - positionArray[0].coordinate.x)
+                        )
+                    }
+                    case "-z": {
+                        return utils.coordinateGeometry.transform(
+                            (x, y, z) => positionArray[0].coordinate.x + (z - positionArray[0].coordinate.z),
+                            (x, y, z) => y,
+                            (x, y, z) => positionArray[0].coordinate.z - (x - positionArray[0].coordinate.x)
+                        )
+                    }
+                }
+            }(facingAxis))
 
 
+            let blockTransform = function (blockType) {
+                if (!utils.blockGeometry.hasBlockDirection(blockType)) return blockType
+                const axis = ["+x", "+z", "-x", "-z"]
+                log(utils.blockGeometry.getBlockDirection(blockType))
+                let blockAxis = (function (direction) {
+                    if (-45 <= direction && direction <= 45) return "+z"
+                    else if (-135 <= direction && direction <= -45) return "+x"
+                    else if (45 <= direction && direction <= 135) return "-x"
+                    else return "-z"
+                })(utils.blockGeometry.getBlockDirection(blockType).y)
+
+                let newBlockAxis = axis[(axis.indexOf(blockAxis) + axis.indexOf(facingAxis) - axis.indexOf("+x")) % axis.length]
+                log({ blockAxis, newBlockAxis }, { newBlockType: utils.blockGeometry.setBlockDirection(blockType, newBlockAxis) })
+                return utils.blockGeometry.setBlockDirection(blockType, newBlockAxis)
+            }
+
+            blockArray = blockArray.map((block) => {
+
+                return new Block(new Position(transform(block.position.coordinate), block.position.dimension), blockTransform(block.blockType))
+            })
+
+
+            // throw "123"
             return blockArray
         }
     }

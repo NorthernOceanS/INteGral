@@ -10,16 +10,16 @@ const lastTimeOfPlayerRequest = new Map()
 function assembleUseItemData(player, block) {
     function getDirectionFromPlayer(player) {
         let rotation = player.getTag().getTag("Rotation").toArray()
-        return new Direction(rotation[0], rotation[1])
+        return new Direction(rotation[1], rotation[0])
     }
     let { x, y, z } = block.pos
-    let dimension = block.pos.dimid//TODO:convert to string.
+    let dimension = block.pos.dimid//TODO:Change name to dimensionid
 
     // let logger = loggerFactory(player.xuid)
-    // logger.logObject("verbose", block.getNbt().toString())
-
+    // log(block.getNbt().toObject())
+    // log(getDirectionFromPlayer(player))
     return {
-        blockType: new BlockType(block.type, block.getBlockState()),
+        blockType: new BlockType(block.type, block.getBlockState(), block.getBlockEntity()?.getNbt().toSNBT()),
         position: new Position({ x, y, z }, dimension),
         direction: getDirectionFromPlayer(player)
     }
@@ -35,8 +35,8 @@ system.inject({
         let user = system.getUser(id);
         return {
             logger: loggerFactory(id),
-            file,
-            getBlock
+            file: file,
+            getBlock: getBlock
         };
     }
 })
@@ -86,7 +86,7 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             break;
         }
         case "get_air": {
-            user.addBlockType(new BlockType("minecraft:air", {}))
+            user.addBlockType(new BlockType("minecraft:air", { }))
             break;
         }
         case "remove_last_position": {
@@ -189,7 +189,8 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
                         case "edittext": {
                             // form.addInput(e.text, "", user.getCurrentState()[e.key])
                             // form.addInput(e.text,`Input ${typeof user.getCurrentState()[e.key]} here`, user.getCurrentState()[e.key].toString())
-                            user.getCurrentState()[ui[i].key] = parseInt(e)
+                            if (ui[i].inputType && ui[i].inputType == "string") user.getCurrentState()[ui[i].key] = e
+                            else user.getCurrentState()[ui[i].key] = parseInt(e)
                             break;
                         }
                     }
@@ -215,9 +216,9 @@ function handlePlayerRequest({ requestType, playerID, additionalData }) {
             break;
         }
         case "run_nos": {
-            if(additionalData.nos=="undo") undo(playerID)
+            if (additionalData.nos == "undo") undo(playerID)
             else
-            user.runNOS(additionalData.nos, undefined)
+                user.runNOS(additionalData.nos, undefined)
             break;
         }
     }
@@ -295,6 +296,11 @@ let compiler = {
                     );
 
         return []
+    },
+    setblockWithTiledata: function ({ x, y, z, blockIdentifier, tiledata }) {
+        mc.runcmd(`/setblock ${x} ${y} ${z} ${blockIdentifier.slice(blockIdentifier.indexOf(":") + 1)} ${tiledata} replace`, (commandResultData) => {
+        });
+        return []
     }
     //TODO
     //,
@@ -370,11 +376,9 @@ function undoPrepare(playerID, buildInstructions) {
                 return coordinates
             }
         }
-
         if (!buildInstruction.hasOwnProperty("type")) return [buildInstruction.position.coordinate]
         else return affectedCoordinateCalculator[buildInstruction.type](buildInstruction.data)
     }).flat()
-    logger.logObject("verbose", coordinates)
     let affectedBlocks = coordinates.map((coordinate) => {
         logger.logObject("verbose", new Position(coordinate))
         return new Block(new Position(coordinate), getBlock(new Position(coordinate)))
@@ -385,7 +389,7 @@ function undoPrepare(playerID, buildInstructions) {
 function undo(playerID) {
     let blocks = getUser(playerID).session.__blockForUndo
     let logger = loggerFactory(playerID);
-    logger.log("info","Trying to undo...")
+    logger.log("info", "Trying to undo...")
     if (!blocks) {
         logger.log("info", "No last execution, or such is no longer recoverable.")
         return
@@ -440,12 +444,14 @@ function setBlock(block) {
     let coordinate = position.coordinate
     // STILL thank you, WavePlayz!
 
-
     //TODO:
     //It currently use destroy mode to force replace the old block, but will leave tons of items.
     //Might change to set air block first.
     //NEW TODO: UNDERSTANDING WHAT THE FUDGE I WAS TALKING ABOUT HERE.
     mc.runcmd(`/setblock ${coordinate.x} ${coordinate.y} ${coordinate.z} ${blockType.blockIdentifier.slice(blockType.blockIdentifier.indexOf(":") + 1)} [${blockType.blockState == null ? "" : JSON.stringify(blockType.blockState).slice(1, -1)}] replace`);
+    if (blockType.blockNBT) {
+        mc.getBlock(coordinate.x, coordinate.y, coordinate.z, position.dimension).getBlockEntity()?.setNbt(NBT.parseSNBT(blockType.blockNBT))//TODO:Change name to dimensionid
+    }
 }
 function loggerFactory(playerID) {
     return {

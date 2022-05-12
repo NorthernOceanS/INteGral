@@ -220,6 +220,7 @@ let createLineGenerator = canonicalGeneratorFactory({
                     viewtype: "edittext",
                     text: "Vertical gradient:",
                     key: "gradient",
+                    inputType: "float"
                 }
             ])
     ),

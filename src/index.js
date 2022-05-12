@@ -30,13 +30,48 @@ function getBlock(position) {
     let block = new BlockType(rawBlock.type, rawBlock.getBlockState())
     return block
 }
+class NCExternal {
+    constructor(wsc, port = 4569) {
+        this.wsc = wsc
+        wsc.connect(`ws://127.0.0.1:${port}`)
+        wsc.listen("onTextReceived", (d) => {
+            // log(d)
+            // const res = JSON.parse(d)
+            // if (res.ID && this.request.has(res.ID)) {
+            //     this.request.get(res.ID).resolve(d.data)
+            //     this.request.delete(res.ID)
+            // }
+            wsc.send("OK")
+        })
+        wsc.listen("onBinaryReceived", (d) => {
+            log(d)
+        })
+    }
+
+    request = new Map()
+    async sendRequest({ type, data }) {
+
+        let ID
+        do {
+            ID = Math.floor(Math.random() * 1000)
+        } while (this.request.has(ID))
+        log(JSON.stringify({ ID, type, data }))
+        this.wsc.send(JSON.stringify({ ID, type, data }))
+        return new Promise((resolve, reject) => {
+            this.request.set(ID, { resolve, reject })
+            // setTimeout(() => reject("Time limit exceeded!"), 10 * 1000)
+        })
+    }
+}
+const ncx = new NCExternal(network.newWebSocket())
 system.inject({
     createRuntime: function (id) {
         let user = system.getUser(id);
         return {
             logger: loggerFactory(id),
             file: file,
-            getBlock: getBlock
+            getBlock: getBlock,
+            sendRequest: ncx.sendRequest.bind(ncx)
         };
     }
 })
@@ -299,8 +334,8 @@ let compiler = {
         return []
     },
     setblockWithTiledata: function ({ x, y, z, blockIdentifier, tiledata }) {
-        mc.runcmd(`/setblock ${x} ${y} ${z} ${blockIdentifier.slice(blockIdentifier.indexOf(":") + 1)} ${tiledata} replace`, (commandResultData) => {
-        });
+        // this.player.runcmd(`/setblock ${x} ${y} ${z} ${blockIdentifier.slice(blockIdentifier.indexOf(":") + 1)} ${tiledata} replace`, (commandResultData) => {});
+        mc.setBlock(x,y,z,0,blockIdentifier,tiledata)
         return []
     }
     //TODO

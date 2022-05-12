@@ -1,6 +1,60 @@
 import { systemInstance as system, Description, Usage, Block, Coordinate, Position, BlockType, BuildInstruction, canonicalGeneratorFactory } from 'norma-core';
 import { utils } from '../utils'
 import { Midi } from '@tonejs/midi'
+
+/*system.registerCanonicalGenerator({
+    description: new Description("NZ IS JUJUJUJULAO", new Usage([], [], [], [])),
+    criteria: { positionArrayLength: 1, blockTypeArrayLength: 0, directionArrayLength: 0 },
+    option: { },
+    method: {
+        generate: async function (e) {
+            const { logger, file, sendRequest } = e.runtime
+            const position = e.state.positions[0]
+
+            await sendRequest({ type: "picture", data: { position } })
+
+            // const fi = file.open(`plugins/0_0.jpg`, file.ReadMode, true)
+            // const image = await Image.load(fi.readAllSync())
+            // const pixels = image.getPixelsArray()
+            // const blockArray = pixels.map((p, i) => {
+            //     const woolPalette = {
+            //         "white": [233, 236, 236],
+            //         "orange": [240, 118, 19],
+            //         "magenta": [240, 118, 19],
+            //         "light_blue": [58, 175, 217],
+            //         "yellow": [248, 198, 39],
+            //         "lime": [112, 185, 25],
+            //         "pink": [237, 141, 172],
+            //         "gray": [62, 68, 71],
+            //         "silver": [142, 142, 134],
+            //         "cyan": [21, 137, 145],
+            //         "purple": [121, 42, 172],
+            //         "blue": [53, 57, 157],
+            //         "brown": [114, 71, 40],
+            //         "green": [84, 109, 27],
+            //         "red": [161, 39, 34],
+            //         "black": [20, 21, 25]
+            //     }
+            //     const res = Object.entries(woolPalette).reduce((pre, cur) => {
+            //         function colorDistance(a, b) {
+            //             return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]))
+            //         }
+            //         return colorDistance(p, pre[1]) < colorDistance(p, cur[1]) ? pre : cur
+            //     })
+            //     return new Block(
+            //         new Position(
+            //             new Coordinate(position.coordinate.x + i % image.width, position.coordinate, y, position.coordinate.z + Math.floor(i / width)),
+            //             position.dimension
+            //         ),
+            //         new BlockType("minecraft:wool", {
+            //             "color": res[0]
+            //         })
+            //     )
+            // })
+        }
+    }
+})*/
+
 function deepEqual(a, b) {
     return a === b || (a && b && typeof a === "object" && typeof b === "object" && Object.keys(a).length === Object.keys(b) && Object.keys(a).every((property) => deepEqual(a[property], b[property])))
 }
@@ -57,6 +111,7 @@ system.registerCanonicalGenerator({
 
                 const midiData = fi.readAllSync()
                 const midi = new Midi(midiData)
+                fi.close()
                 let songs = []
                 for (let trackNumber = 0; trackNumber < midi.tracks.length; trackNumber++) {
                     logger.log("verbose", "NZ IS JULAO!")
@@ -106,7 +161,7 @@ system.registerCanonicalGenerator({
                 }
 
 
-                fi.close()
+
 
 
                 return songs
@@ -128,13 +183,13 @@ system.registerCanonicalGenerator({
                         logger.log("verbose", "Oh...NZ IS JULAO!")
                         let { pitch, instrument } = note
                         blockArray.push(new Block(new Position(new Coordinate(coordinate.x, coordinate.y, coordinate.z), positionArray[0].dimension),
-                            new BlockType("minecraft:command_block", { },
+                            new BlockType("minecraft:command_block", {},
                                 `{"Command":"/execute @a ~ ~ ~ playsound note.harp @s ~~~ 1 ${Math.pow(2, pitch / 12 - 1)} ","CustomName":"","ExecuteOnFirstTick":0b,"LPCommandMode":0,"LPCondionalMode":0b,"LPRedstoneMode":0b,"LastExecution":0l,"LastOutput":"","LastOutputParams":[],"SuccessCount":0,"TickDelay":0,"TrackOutput":1b,"Version":15,"auto":0b,"conditionMet":0b,"id":"CommandBlock","isMovable":1b,"powered":0b,"x":522,"y":71,"z":-1}`)
                         ))
 
                     }
                     function setBedBlock(coordinate) {
-                        blockArray.push(new Block(new Position(coordinate, positionArray[0].dimension), new BlockType("minecraft:grass", { })))
+                        blockArray.push(new Block(new Position(coordinate, positionArray[0].dimension), new BlockType("minecraft:grass", {})))
                     }
                     function setRepeater(coordinate, delay, direction) {
                         setBedBlock(new Coordinate(coordinate.x, coordinate.y - 1, coordinate.z))
@@ -328,7 +383,7 @@ system.registerCanonicalGenerator({
                 let unvisitedNeighbor = getUnvisitedNeighbor(V)
                 if (unvisitedNeighbor.length == 0) C = C.filter(e => e != V)
                 else {
-                    let chosenNeighbor = unvisitedNeighbor[getRandomInt(0, unvisitedNeighbor.length - 1)]
+                    let chosenNeighbor = unvisitedNeighbor[getRandomInt(0, unvisitedNeighbor.length)]
                     function removeWall(A, B) {
                         W.push([(A[0] + B[0]) / 2, (A[1] + B[1]) / 2])
                     }
@@ -364,18 +419,3 @@ system.registerCanonicalGenerator({
     }
 })
 
-system.registerCanonicalGenerator({
-    description: new Description("NZ IS JUJULAO", new Usage([], [], [], [])),
-    criteria: { positionArrayLength: 1, blockTypeArrayLength: 0, directionArrayLength: 0 },
-    option: { },
-    method: {
-        generate: function (e) {
-            let { state, runtime } = e;
-            let { logger } = runtime;
-            let coordinate = state.positions[0].coordinate
-
-            return [new Block(state.positions[0], new BlockType("minecraft:command_block", null, '{"Command":"/say 1234","CustomName":"","ExecuteOnFirstTick":0b,"LPCommandMode":0,"LPCondionalMode":0b,"LPRedstoneMode":0b,"LastExecution":0l,"LastOutput":"","LastOutputParams":[],"SuccessCount":0,"TickDelay":0,"TrackOutput":1b,"Version":15,"auto":0b,"conditionMet":0b,"id":"CommandBlock","isMovable":1b,"powered":0b,"x":522,"y":71,"z":-1}'))]
-
-        }
-    }
-})

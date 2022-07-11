@@ -183,13 +183,13 @@ system.registerCanonicalGenerator({
                         logger.log("verbose", "Oh...NZ IS JULAO!")
                         let { pitch, instrument } = note
                         blockArray.push(new Block(new Position(new Coordinate(coordinate.x, coordinate.y, coordinate.z), positionArray[0].dimension),
-                            new BlockType("minecraft:command_block", { },
+                            new BlockType("minecraft:command_block", {},
                                 `{"Command":"/execute @a ~ ~ ~ playsound note.harp @s ~~~ 1 ${Math.pow(2, pitch / 12 - 1)} ","CustomName":"","ExecuteOnFirstTick":0b,"LPCommandMode":0,"LPCondionalMode":0b,"LPRedstoneMode":0b,"LastExecution":0l,"LastOutput":"","LastOutputParams":[],"SuccessCount":0,"TickDelay":0,"TrackOutput":1b,"Version":15,"auto":0b,"conditionMet":0b,"id":"CommandBlock","isMovable":1b,"powered":0b,"x":522,"y":71,"z":-1}`)
                         ))
 
                     }
                     function setBedBlock(coordinate) {
-                        blockArray.push(new Block(new Position(coordinate, positionArray[0].dimension), new BlockType("minecraft:grass", { })))
+                        blockArray.push(new Block(new Position(coordinate, positionArray[0].dimension), new BlockType("minecraft:grass", {})))
                     }
                     function setRepeater(coordinate, delay, direction) {
                         setBedBlock(new Coordinate(coordinate.x, coordinate.y - 1, coordinate.z))
@@ -383,7 +383,7 @@ system.registerCanonicalGenerator({
                 let unvisitedNeighbor = getUnvisitedNeighbor(V)
                 if (unvisitedNeighbor.length == 0) C = C.filter(e => e != V)
                 else {
-                    let chosenNeighbor = unvisitedNeighbor[getRandomInt(0, unvisitedNeighbor.length - 1)]
+                    let chosenNeighbor = unvisitedNeighbor[getRandomInt(0, unvisitedNeighbor.length)]
                     function removeWall(A, B) {
                         W.push([(A[0] + B[0]) / 2, (A[1] + B[1]) / 2])
                     }

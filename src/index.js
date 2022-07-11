@@ -334,8 +334,8 @@ let compiler = {
         return []
     },
     setblockWithTiledata: function ({ x, y, z, blockIdentifier, tiledata }) {
-        mc.runcmd(`/setblock ${x} ${y} ${z} ${blockIdentifier.slice(blockIdentifier.indexOf(":") + 1)} ${tiledata} replace`, (commandResultData) => {
-        });
+        // this.player.runcmd(`/setblock ${x} ${y} ${z} ${blockIdentifier.slice(blockIdentifier.indexOf(":") + 1)} ${tiledata} replace`, (commandResultData) => {});
+        mc.setBlock(x,y,z,0,blockIdentifier,tiledata)
         return []
     }
     //TODO
